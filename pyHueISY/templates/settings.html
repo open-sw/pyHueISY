@@ -1,0 +1,69 @@
+{% extends "layout.html" %}
+{% block back_url %}{{ url_for("show_actions") }}{% endblock %}
+{% block back_text %}Actions{% endblock %}
+{% block page_title %}Settings{% endblock %}
+{% block forward_url %}{{ url_for("show_scenes") }}{% endblock %}
+{% block forward_text %}Scenes{% endblock %}
+{% block body %}
+    <form method="post">
+        <fieldset>
+            <legend>Hue</legend>
+            <table>
+                <tbody>
+                    <tr>
+                        <td>
+                            Host Name or IP Address
+                        </td>
+                        <td>
+                            <input name="HueIP" type="text" maxlength="15" size="15" value="{{ settings.HueIP }}">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            User Name
+                        </td>
+                        <td>
+                            <input name="HueUsername" type="text" maxlength="20" size="20" value="{{ settings.HueUsername }}">
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            </fieldset>
+        </fieldset>
+        <p/>
+        <fieldset>
+            <legend>ISY 994i</legend>
+            <table>
+                <tbody>
+                    <tr>
+                        <td>
+                            Host Name or IP Address
+                        </td>
+                        <td>
+                            <input name="IsyIP" type="text" maxlength="15" size="15" value="{{ settings.IsyIP }}">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            User Name
+                        </td>
+                        <td>
+                            <input name="IsyUser" type="text" maxlength="20" size="20" value="{{ settings.IsyUser }}">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Password
+                        </td>
+                        <td>
+                            <input name="IsyPass" type="text" maxlength="20" size="20" value="{{ settings.IsyPass }}">
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            </fieldset>
+        </fieldset>
+        <p/>
+        <div style="text-align: center"><input type="submit" value="Update"></div>
+    </form>
+{% endblock %}

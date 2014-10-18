@@ -1,0 +1,165 @@
+{% extends "layout.html" %}
+{% block back_url %}{{ url_for("show_actions") }}{% endblock %}
+{% block back_text %}Actions{% endblock %}
+{% block page_title %}Action{% endblock %}
+{% block forward_url %}{{ url_for("show_settings") }}{% endblock %}
+{% block forward_text %}Settings{% endblock %}
+{% set trigger_type = [ "" ] %}
+{% block body %}
+    <script type="application/javascript">
+        var nTriggers = {{ action.triggers|length }};
+        var nScenes = {{ action.scenes|length }};
+        var triggerTypes = {{ triggers|tojson|safe }};
+    </script>
+    <script type="application/javascript" src="{{ url_for('static', filename='action_funcs.js') }}"></script>
+    <form method="post">
+        <fieldset>
+            <legend>Action</legend>
+            <table>
+                <tbody>
+                    <tr>
+                        <td>
+                            Name
+                        </td>
+                        <td>
+                            <input name="name" type="text" maxlength="20" size="20" value="{{ action.name }}">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Description
+                        </td>
+                        <td>
+                            <input name="description" type="text" maxlength="100" size="50" value="{{ action.description }}">
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </fieldset>
+        <p/>
+        <fieldset>
+            <legend>Triggers</legend>
+            <table>
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Name</th>
+                        <th>Type</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for trigger in action.triggers %}
+                       <tr>
+                            <td>
+                                <div>
+                                    <input id="delete-trigger-{{ loop.index }}" type="button" class="delete-button" value="" onclick="deleteTrigger(event)">
+                                </div>
+                            </td>
+                            <td>
+                                <div>
+                                    <select name="trigger[{{ loop.index }}]" onchange="filter_select(event, 'trigger-{{ loop.index }}-type')">
+                                        {% for trigger_info in triggers.values()|sort(attribute='name') %}
+                                            <option value="{{ trigger_info.address }}" {% if trigger_info.address == trigger %} selected {% endif %}>{{ trigger_info.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </td>
+                            <td>
+                                <span id="trigger-{{ loop.index }}-type">{{ triggers[trigger]['type_desc'] }}</span>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    <tr id="trigger-new-row">
+                        <td>
+                            <div>
+                                <input id="add-trigger" type="button" class="add-button" value="" onclick="addTrigger()">
+                            </div>
+                        </td>
+                        <td>
+                            <div>
+                                <select id="trigger-new" onchange="filter_select(event, 'trigger-new-type')">
+                                    {% for trigger_info in triggers.values()|sort(attribute='name') %}
+                                        {% if loop.first %}
+                                            {% do trigger_type.pop() %}
+                                            {% do trigger_type.append(trigger_info['type_desc']) %}
+                                        {% endif %}
+                                        <option value="{{ trigger_info.address }}">{{ trigger_info.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </td>
+                        <td>
+                            <span id="trigger-new-type">{{ trigger_type[0] }}</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </fieldset>
+        <p/>
+        <fieldset>
+            <legend>Scenes</legend>
+            <table>
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th>Name: Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for action_scene_id in action.scenes %}
+                       <tr>
+                            <td>
+                                <div>
+                                    <input id="delete-scene-{{ loop.index }}" type="button" class="delete-button" value="" onclick="deleteScene(event)">
+                                </div>
+                            </td>
+                            <td>
+                                <div>
+                                    <input id="move-scene-up-{{ loop.index }}" type="button" class="move-up-button" onclick="moveUpScene(event)" {% if loop.first %} disabled {% endif %}>
+                                </div>
+                            </td>
+                            <td>
+                                <div>
+                                    <input id="move-scene-down-{{ loop.index }}" type="button" class="move-down-button" onclick="moveDownScene(event)" {% if loop.last %} disabled {% endif %}>
+                                </div>
+                            </td>
+                            <td>
+                                <div>
+                                    <select name="scene[{{ loop.index }}]">
+                                        {% for scene_id in scenes %}
+                                            <option value="{{ scene_id }}" {% if scene_id == action_scene_id %} selected {% endif %}> {{ scenes[scene_id].name + ": " + scenes[scene_id].description }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    <tr id="scene-new-row">
+                        <td>
+                            <div>
+                                <input id="add-scene" type="button" class="add-button" value="" onclick="addScene()">
+                            </div>
+                        </td>
+                        <td>    {# Placeholder for MoveUp button #}
+                        </td>
+                        <td>    {# Placeholder for MoveDown button #}
+                        </td>
+                        <td>
+                            <div>
+                                <select id="scene-new">
+                                    {% for scene_id in scenes %}
+                                        <option value="{{ scene_id }}"> {{ scenes[scene_id].name + ": " + scenes[scene_id].description }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </fieldset>
+        <p/>
+        <div style="text-align: center"><input type="submit" value="Update"></div>
+    </form>
+{% endblock %}

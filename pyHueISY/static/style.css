@@ -1,0 +1,99 @@
+body            { font-family: sans-serif; background: #eee; }
+a, h1, h2       { color: #377ba8; }
+h1, h2          { font-family: 'Georgia', serif; margin: 0; }
+h1              { border-bottom: 2px solid #eee; }
+h2              { font-size: 1.2em; }
+
+.page           { margin: 2em auto; width: 50em; border: 5px solid #ccc;
+                  padding: 0.8em; background: white; }
+.entries        { list-style: none; margin: 0; padding: 0; }
+.entries li     { margin: 0.8em 1.2em; }
+.entries li h2  { margin-left: -1em; }
+.add-entry      { font-size: 0.9em; border-bottom: 1px solid #ccc; }
+.add-entry dl   { font-weight: bold; }
+.metanav        { font-size: 1em; padding: 0.3em; margin-top: 0em;
+                  margin-bottom: 1em; background: #fafafa; }
+.flash          { background: #cee5F5; padding: 0.5em;
+                  border: 1px solid #aacbe2; }
+.error          { background: #f0d6d6; padding: 0.5em; }
+
+th              { text-align: left }
+
+legend {
+    font-size: 1.25em;
+}
+.color, .initialized-color
+{
+    height: 2em;
+    text-align: center;
+    cursor:pointer;
+}
+
+.color:disabled, .initialized-color:disabled
+{
+    opacity:0.2;
+}
+
+.add-button, .delete-button, .move-up-button, .move-down-button, .back-button, .forward-button
+{
+    height: 36px;
+    width: 36px;
+    border-style: none;
+    outline-style: none;
+    background: transparent no-repeat center center;
+    vertical-align: middle;
+}
+
+.button-label
+{
+    height: 36px;
+    font-size: 1.25em;
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+    vertical-align: middle;
+}
+
+.add-button
+{
+    background-image: url("/static/add.png");
+}
+
+.delete-button
+{
+    background-image: url("/static/delete.png");
+}
+
+.move-up-button
+{
+    background-image: url("/static/move_up.png");
+}
+
+.move-down-button
+{
+    background-image: url("/static/move_down.png");
+}
+
+.back-button
+{
+    background-image: url("/static/back.png");
+}
+
+.forward-button
+{
+    background-image: url("/static/forward.png");
+}
+
+.add-button:active, .delete-button:active, .move-up-button:active, .move-down-button:active, .back-button:active, .forward-button:active
+{
+    background-position: right bottom;
+}
+
+.move-up-button:disabled, .move-down-button:disabled
+{
+    opacity:0.2;
+}
+
+select
+{
+    height: 2em;
+}

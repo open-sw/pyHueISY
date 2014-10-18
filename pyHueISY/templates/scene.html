@@ -1,0 +1,225 @@
+{% extends "layout.html" %}
+{% block back_url %}{{ url_for("show_scenes") }}{% endblock %}
+{% block back_text %}Scenes{% endblock %}
+{% block page_title %}Scene{% endblock %}
+{% block forward_url %}{{ url_for("show_actions") }}{% endblock %}
+{% block forward_text %}Actions{% endblock %}
+{% block body %}
+    <script type="application/javascript">
+        var nLights = {{ scene.lights|length }};
+        var nColors = {{ scene.colors|length }};
+    </script>
+    <script type="application/javascript" src="{{ url_for('static', filename='scene_funcs.js') }}"></script>
+    <form method="post">
+        <fieldset>
+            <legend>Settings</legend>
+            <table>
+                <tbody>
+                    <tr>
+                        <td>
+                            Name
+                        </td>
+                        <td>
+                            <input name="name" type="text" maxlength="20" size="20" value="{{ scene.name }}">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Description
+                        </td>
+                        <td>
+                            <input name="description" type="text" maxlength="100" size="50" value="{{ scene.description }}">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Transition Time
+                        </td>
+                        <td>
+                            <input name="transition-time" type="number" min="0" max="65535" value="{{ scene.transitiontime }}"> (1/10 second)
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </fieldset>
+        <p/>
+        <fieldset>
+            <legend>Lights</legend>
+            <table>
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Light</th>
+                        <th>Color Assignment</th>
+                        <th>Color</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for light in scene.lightsRGB %}
+                       <tr>
+                            <td>
+                                <div>
+                                    <input id="remove-light-{{ loop.index }}" type="button" class="delete-button" value="" onclick="removeLight(event)">
+                                </div>
+                            </td>
+                            <td>
+                                <div>
+                                    <select name="light[{{ loop.index }}][light]">
+                                        <optgroup label="Groups">
+                                            <option value="group-0" {% if light.type == "group" and light.id == 0 %} selected {% endif %}>All Lights</option>
+                                            {% for group_id in groups|sort %}
+                                                <option value="{{ "group-" ~ group_id }}" {% if light.type == "group" and light.id|string == group_id %} selected {% endif %}> {{ groups[group_id].name }}</option>
+                                            {% endfor %}
+                                        </optgroup>
+                                        <optgroup label="Lights">
+                                            {% for light_id in lights %}
+                                                <option value="{{ "light-" ~ light_id|string }}" {% if light.type == "light" and light.id == light_id %} selected {% endif %}> {{ lights[light_id].name }}</option>
+                                            {% endfor %}
+                                        </optgroup>
+                                    </select>
+                                </div>
+                            </td>
+                            <td style="width: 50%">
+                                <div class="switch-toggle switch-3 switch-candy switch-candy-blue">
+                                    <input id="auto-{{ loop.index }}" name="light[{{ loop.index }}][mode]" value="auto" type="radio" {% if light.mode == "auto" or light.mode is not defined %} checked {% endif %} onclick="document.getElementById('light-{{ loop.index }}-color').disabled = true;">
+                                    <label id="auto-label-{{ loop.index }}" for="auto-{{ loop.index }}" onclick="">Auto</label>
+
+                                    <input id="manual-{{ loop.index }}" name="light[{{ loop.index }}][mode]" value="manual" type="radio" {% if light.mode == "manual" %} checked {% endif %} onclick="document.getElementById('light-{{ loop.index }}-color').disabled = false;">
+                                    <label id="manual-label-{{ loop.index }}" for="manual-{{ loop.index }}" onclick="">Manual</label>
+
+                                    <input id="off-{{ loop.index }}" name="light[{{ loop.index }}][mode]" value="off" type="radio" {% if light.mode == "off" %} checked {% endif %} onclick="document.getElementById('light-{{ loop.index }}-color').disabled = true;">
+                                    <label id="off-label-{{ loop.index }}" for="off-{{ loop.index }}" onclick="">Off</label>
+
+                                    <a></a>
+                                </div>
+                            </td>
+                            <td>
+                                <div>
+                                    <input id="light-{{ loop.index }}-color" class="color" name="light[{{ loop.index }}][color]" {% if light.mode != "manual"  %} disabled {% else %} value = "{{ light.color }}" {% endif %}>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    <tr id="light-new-row">
+                        <td>
+                            <div>
+                                <input id="add-light" type="button" class="add-button" value="" onclick="addLight()">
+                            </div>
+                        </td>
+                        <td>
+                            <div>
+                                <select>
+                                    <optgroup label="Groups">
+                                        <option value="group-0">All Lights</option>
+                                        {% for group_id in groups|sort %}
+                                            <option value="{{ "group-" ~ group_id }}"> {{ groups[group_id].name }}</option>
+                                        {% endfor %}
+                                    </optgroup>
+                                    <optgroup label="Lights">
+                                        {% for light_id in lights %}
+                                            <option value="{{ "light-" ~ light_id|string }}"> {{ lights[light_id].name }}</option>
+                                        {% endfor %}
+                                    </optgroup>
+                                </select>
+                            </div>
+                        </td>
+                        <td style="width: 50%">
+                            <div class="switch-toggle switch-3 switch-candy switch-candy-blue">
+                                <input id="auto-new" name="mode-new" value="auto" type="radio" onclick="document.getElementById('light-new-color').disabled = true;">
+                                <label id="auto-new-label" for="auto-new" onclick="">Auto</label>
+
+                                <input id="manual-new" name="mode-new" value="manual" type="radio" checked onclick="document.getElementById('light-new-color').disabled = false;">
+                                <label id="manual-new-label" for="manual-new" onclick="">Manual</label>
+
+                                <input id="off-new" name="mode-new" value="off" type="radio" onclick="document.getElementById('light-new-color').disabled = true;">
+                                <label id="off-new-label" for="off-new" onclick="">Off</label>
+
+                                <a></a>
+                            </div>
+                        </td>
+                        <td>
+                            <div>
+                                <input id="light-new-color" class="color">
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </fieldset>
+        <p/>
+        <fieldset>
+            <legend>Automatic Colors</legend>
+            <table>
+                <tbody>
+                    <tr>
+                        <td colspan="3">
+                            Color Assignment
+                        </td>
+                        <td style="width: 75%" colspan="5">
+                            <div class="switch-toggle switch-3 switch-candy switch-candy-blue">
+                                <input id="simple" name="type" value="simple" type="radio" {% if scene.type == "simple" %} checked {% endif %}>
+                                <label for="simple" onclick="">Simple</label>
+
+                                <input id="ascending" name="type" value="ascending" type="radio" {% if scene.type == "ascending" %} checked {% endif %}>
+                                <label for="ascending" onclick="">Ascending</label>
+
+                                <input id="descending" name="type" value="descending" type="radio" {% if scene.type == "descending" %} checked {% endif %}>
+                                <label for="descending" onclick="">Descending</label>
+
+                                <a></a>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="3">
+                            Interval
+                        </td>
+                        <td>
+                            <input name="interval" type="number" min="0" max="3600" value="{{ scene.interval }}"> (seconds)
+                        </td>
+                    </tr>
+                    {% for color in scene.colorsRGB %}
+                        <tr>
+                            <td>
+                                <div>
+                                    <input id="remove-color-{{ loop.index }}" type="button" class="delete-button" onclick="removeColor(event)">
+                                </div>
+                            </td>
+                            <td>
+                                <div>
+                                    <input id="move-color-up-{{ loop.index }}" type="button" class="move-up-button" onclick="moveUpColor(event)" {% if loop.first %} disabled {% endif %}>
+                                </div>
+                            </td>
+                            <td>
+                                <div>
+                                    <input id="move-color-down-{{ loop.index }}" type="button" class="move-down-button" onclick="moveDownColor(event)" {% if loop.last %} disabled {% endif %}>
+                                </div>
+                            </td>
+                            <td>
+                                <div>
+                                    <input id="color-{{ loop.index }}" class="color" name="color[{{ loop.index }}]" value="{{ color }}">
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    <tr id="color-new-row">
+                        <td>
+                            <div>
+                                <input id="add-color" type="button" class="add-button" onclick="addColor()">
+                            </div>
+                        </td>
+                        <td></td>
+                        <td></td>
+                        <td>
+                            <div>
+                                <input id="color-new" class="color">
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </fieldset>
+        <p/>
+        <div style="text-align: center"><input type="submit" value="Update"></div>
+    </form>
+{% endblock %}

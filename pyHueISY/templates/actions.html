@@ -1,0 +1,48 @@
+{% extends "layout.html" %}
+{% block back_url %}{{ url_for("show_scenes") }}{% endblock %}
+{% block back_text %}Scenes{% endblock %}
+{% block page_title %}Actions{% endblock %}
+{% block forward_url %}{{ url_for("show_settings") }}{% endblock %}
+{% block forward_text %}Settings{% endblock %}
+{% block body %}
+    <fieldset>
+        <legend>Actions</legend>
+            <table>
+                <thead>
+                    <th></th>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Scenes</th>
+                </thead>
+                <tbody>
+                    {% for action_id in actions %}
+                        {% set actions_loop = loop %}
+                        <tr>
+                            <td>
+                                <input type="button" class="delete-button" onclick="window.location.href = '{{ url_for("delete_action", action_id=action_id) }}'">
+                            </td>
+                            <td>
+                                <a href="{{ url_for("show_action", action_id=action_id) }}">{{ actions[action_id].name }}</a>
+                            </td>
+                            <td>
+                                {{ actions[action_id].description }}
+                            </td>
+                            <td>
+                                {% for scene in actions[action_id].scenes %}
+                                    <input type="radio" id="action-{{- actions_loop.index }}-scene-{{- loop.index }}" name="action[{{- actions_loop.index }}][scene]" {% if actions[action_id].current_scene == loop.index0 %}checked{% endif %}>{{ scene }}<br/>
+                                {% endfor %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    <tr>
+                        <td>
+                            <input type="button" class="add-button" onclick="window.location.href = '{{ url_for("show_action", action_id="new") }}'">
+                        </td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+    </fieldset>
+{% endblock %}

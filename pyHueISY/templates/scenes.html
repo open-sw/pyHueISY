@@ -1,0 +1,44 @@
+{% extends "layout.html" %}
+{% block back_url %}{{ url_for("show_settings") }}{% endblock %}
+{% block back_text %}Settings{% endblock %}
+{% block page_title %}Scenes{% endblock %}
+{% block forward_url %}{{ url_for("show_actions") }}{% endblock %}
+{% block forward_text %}Actions{% endblock %}
+{% block body %}
+    <fieldset>
+        <legend>Scenes</legend>
+            <table>
+                <thead>
+                    <th>
+                        &nbsp;
+                    </th>
+                    <th>
+                        Name
+                    </th>
+                    <th>
+                        Description
+                    </th>
+                </thead>
+                <tbody>
+                    {% for scene_id in scenes|sort %}
+                        <tr>
+                            <td>
+                                <input type="button" class="delete-button" onclick="window.location.href = '{{ url_for("delete_scene", scene_id=scene_id) }}'">
+                            </td>
+                            <td>
+                                <a href="{{ url_for("show_scene", scene_id=scene_id) }}">{{ scenes[scene_id].name }}</a>
+                            </td>
+                            <td>
+                                {{ scenes[scene_id].description }}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    <tr>
+                        <td>
+                            <input type="button" class="add-button" onclick="window.location.href = '{{ url_for("show_scene", scene_id="new") }}'">
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+    </fieldset>
+{% endblock %}
