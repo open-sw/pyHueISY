@@ -5,6 +5,7 @@
 {% block forward_url %}{{ url_for("show_scenes") }}{% endblock %}
 {% block forward_text %}Scenes{% endblock %}
 {% block body %}
+    <script type="application/javascript" src="{{ url_for('static', filename='settings_funcs.js') }}"></script>
     <form method="post">
         <fieldset>
             <legend>Hue</legend>
@@ -24,6 +25,9 @@
                         </td>
                         <td>
                             <input name="HueUsername" type="text" maxlength="20" size="20" value="{{ settings.HueUsername }}">
+                        </td>
+                        <td>
+                            <input name="HueRegister" type="submit" value="Create hue User" onclick="alert('Press the link button on the Hue bridge and then click OK'); return true">
                         </td>
                     </tr>
                 </tbody>

@@ -19,7 +19,6 @@ logger = logging.getLogger(__package__)
 
 
 class Scene(object):
-
     def __init__(self, **kwargs):
         # logger.debug("Scene ", self.__class__.__name__)
 
@@ -61,8 +60,8 @@ class Scene(object):
     def brightness(self, value):
         if value < 0:
             value = 0
-        elif value > 254:
-            value = 254
+        elif value > 255:
+            value = 255
 
         self._brightness = value
 
@@ -95,20 +94,22 @@ class Scene(object):
         return self._colors
 
     @property
-    def colorsRGB(self):
+    def colors_rgb(self):
         colors = []
         for color in self._colors:
-            red, green, blue = colorsys.hsv_to_rgb(color['hue'] / 65535.0, color['sat'] / 254.0, color.get('bri', 128) / 255.0)
-            colors.append(('%.2X' % int(red * 255)) + ('%.2X' % int(green * 255)) + ('%.2X' % int(blue * 255)))
+            red, green, blue = colorsys.hsv_to_rgb(color['hue'] / 65535.0,
+                                                   color['sat'] / 255.0,
+                                                   color.get('bri', 128) / 255.0)
+            colors.append('%.2X%.2X%.2X' % (int(red * 255), int(green * 255), int(blue * 255)))
         return colors
 
     def add_color(self, color):
         self._colors.append(color)
 
-    def add_colorRGB(self, color):
+    def add_color_rgb(self, color):
         rgb = bytearray(color.decode('hex'))
         h, s, v = colorsys.rgb_to_hsv(rgb[0] / 255.0, rgb[1] / 255.0, rgb[2] / 255.0)
-        self._colors.append({'hue': int(h * 65535), 'sat': int(s * 254), 'bri': int(v * 255)})
+        self._colors.append({'hue': int(h * 65535), 'sat': int(s * 255), 'bri': int(v * 255)})
 
     def remove_color(self, index):
         self._colors.remove(index)
@@ -118,14 +119,16 @@ class Scene(object):
         return self._lights
 
     @property
-    def lightsRGB(self):
+    def lights_rgb(self):
         lights = []
         for light in self._lights:
             if 'color' in light:
-                lightRGB = copy.deepcopy(light)
-                red, green, blue = colorsys.hsv_to_rgb(light['color']['hue'] / 65535.0, light['color']['sat'] / 254.0, light['color'].get('bri', 128) / 255.0)
-                lightRGB['color'] = ('%.2X' % int(red * 255)) + ('%.2X' % int(green * 255)) + ('%.2X' % int(blue * 255))
-                lights.append(lightRGB)
+                light_rgb = copy.deepcopy(light)
+                red, green, blue = colorsys.hsv_to_rgb(light['color']['hue'] / 65535.0,
+                                                       light['color']['sat'] / 255.0,
+                                                       light['color'].get('bri', 128) / 255.0)
+                light_rgb['color'] = '%.2X%.2X%.2X' % (int(red * 255), int(green * 255), int(blue * 255))
+                lights.append(light_rgb)
             else:
                 lights.append(light)
         return lights
@@ -133,15 +136,14 @@ class Scene(object):
     def add_member(self, light):
         self._lights.append(light)
 
-    def add_memberRGB(self, lightRGB):
-        light = {}
-        if 'color' in lightRGB:
-            light = copy.deepcopy(lightRGB)
-            rgb = bytearray(lightRGB['color'].decode('hex'))
+    def add_member_rgb(self, light_rgb):
+        if 'color' in light_rgb:
+            light = copy.deepcopy(light_rgb)
+            rgb = bytearray(light_rgb['color'].decode('hex'))
             h, s, v = colorsys.rgb_to_hsv(rgb[0] / 255.0, rgb[1] / 255.0, rgb[2] / 255.0)
-            light['color'] = {'hue': int(h * 65535), 'sat': int(s * 254), 'bri': int(v * 255)}
+            light['color'] = {'hue': int(h * 65535), 'sat': int(s * 255), 'bri': int(v * 255)}
         else:
-            light = lightRGB
+            light = light_rgb
         self._lights.append(light)
 
     def remove_member(self, index):
@@ -158,7 +160,7 @@ class Scene(object):
                 hue_bridge.set_light(light["id"], action)
 
         self._first_color = 0
-        self._brightness = 254
+        self._brightness = 255
 
         return None
 
@@ -235,142 +237,3 @@ class Scene(object):
                 hue_bridge.set_group(light["id"], action)
             elif light["type"] == "light":
                 hue_bridge.set_light(light["id"], action)
-
-
-if __name__ == '__main__':
-    from phue import phue
-    import time
-
-    bridge = phue.Bridge(ip="172.24.0.22", username="isy994user")
-
-    descending_scene_cfg = {
-        "type": "descending",
-        "interval": 5,
-        "colors": [
-            {
-                "sat": 220,
-                "hue": 65000
-            },
-            {
-                "sat": 220,
-                "hue": 44000
-            },
-            {
-                "sat": 220,
-                "hue": 33000
-            },
-            {
-                "sat": 220,
-                "hue": 22000
-            },
-            {
-                "sat": 220,
-                "hue": 11000
-            }
-        ],
-        "members": [
-            {
-                "type": "group",
-                "id": 2
-            },
-            {
-                "type": "light",
-                "id": 8
-            },
-            {
-                "type": "light",
-                "id": 9
-            }
-        ]
-    }
-
-    primary_scene_cfg = {
-        "type": "simple",
-        "colors": [
-            {
-                "sat": 254,
-                "hue": 0
-            },
-            {
-                "sat": 254,
-                "hue": 21845
-            },
-            {
-                "sat": 254,
-                "hue": 43690
-            }
-        ],
-        "members": [
-            {
-                "type": "group",
-                "id": 2
-            }
-        ]
-    }
-
-    complex_scene_cfg = {
-        "type": "simple",
-        "interval": 5,
-        "colors": [
-            {
-                "sat": 254,
-                "hue": 0
-            },
-            {
-                "sat": 254,
-                "hue": 19296
-            },
-            {
-                "sat": 254,
-                "hue": 40959
-            },
-            {
-                "sat": 254,
-                "hue": 8191
-            },
-            {
-                "sat": 254,
-                "hue": 30218
-            },
-            {
-                "sat": 254,
-                "hue": 51699
-            }
-        ],
-        "members": [
-            {
-                "type": "group",
-                "id": 2
-            }
-        ]
-    }
-
-    simple_scene_cfg = {
-        "type": "simple",
-        "colors": [
-            {
-                "sat": 255,
-                "hue": 10992
-            }
-        ],
-        "members": [
-            {
-                "type": "group",
-                "id": 2
-            }
-        ]
-    }
-
-    simple_scene = Scene(settings=complex_scene_cfg)
-
-    while False:
-        sleep_time = simple_scene.on(bridge)
-        if sleep_time is None:
-            break
-        time.sleep(sleep_time)
-
-    #simple_scene.on(bridge)
-    #time.sleep(10)
-    #simple_scene.brightness(50)
-    #simple_scene.on(bridge)
-

@@ -5,3 +5,6 @@
 *.pyc
 /build/
 /.idea/
+/MANIFEST
+
+HueISY.json

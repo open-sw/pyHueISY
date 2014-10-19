@@ -55,7 +55,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for light in scene.lightsRGB %}
+                    {% for light in scene.lights_rgb %}
                        <tr>
                             <td>
                                 <div>
@@ -178,7 +178,7 @@
                             <input name="interval" type="number" min="0" max="3600" value="{{ scene.interval }}"> (seconds)
                         </td>
                     </tr>
-                    {% for color in scene.colorsRGB %}
+                    {% for color in scene.colors_rgb %}
                         <tr>
                             <td>
                                 <div>

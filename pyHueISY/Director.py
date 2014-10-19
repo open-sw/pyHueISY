@@ -60,7 +60,7 @@ class Director(object):
         self._Isy_IP = None
         self._Isy_User = None
         self._Isy_Pass = None
-        self._Isy = None
+        self._isy_controller = None
 
         self._actions = {}
         self._scenes = {}
@@ -74,14 +74,15 @@ class Director(object):
 
     @property
     def settings(self):
-        return {'HueIP': self._Hue_IP, 'HueUsername': self._Hue_Username, 'IsyIP': self._Isy_IP, 'IsyUser': self._Isy_User, 'IsyPass': self._Isy_Pass}
+        return {'HueIP': self._Hue_IP, 'HueUsername': self._Hue_Username, 'IsyIP': self._Isy_IP,
+                'IsyUser': self._Isy_User, 'IsyPass': self._Isy_Pass}
 
     @property
-    def Isy(self):
-        return self._Isy
+    def isy_controller(self):
+        return self._isy_controller
 
     @property
-    def HueBridge(self):
+    def hue_bridge(self):
         return self._Hue_Bridge
 
     @property
@@ -127,13 +128,16 @@ class Director(object):
     def get_triggers(self):
         if self._isy_triggers is None:
             self._isy_triggers = {}
-            for node in self._Isy:
+            for node in self._isy_controller:
                 if node.objtype == "node":
                     category, subcat, version, other = node.type.split('.')
                     node_type_info = insteon_devices.get(category + "." + subcat)
                     if node_type_info is not None:
                         node_info = {
-                            'name': node.name, 'type': node.type, 'address': node.address, 'type_desc': node_type_info["name"]
+                            'name': node.name,
+                            'type': node.type,
+                            'address': node.address,
+                            'type_desc': node_type_info["name"]
                         }
                         self._isy_triggers[node_info['address']] = node_info
                 else:
@@ -156,7 +160,9 @@ class Director(object):
         #   *: node = id
         # action
         #   0 =
-        logger.debug("control="+data['Event']["control"]+", action="+data['Event']["action"]+", node="+data['Event']["node"])
+        logger.debug("control="+data['Event']["control"] +
+                     ", action="+data['Event']["action"] +
+                     ", node="+data['Event']["node"])
         control = data['Event']['control']
         responder = self._trigger_actions.get(data['Event']['node'])
         if responder:
@@ -175,11 +181,11 @@ class Director(object):
         self.load_config()
         self._Hue_Bridge = phue.Bridge(ip=self._Hue_IP, username=self._Hue_Username)
 
-        self._Isy = ISY.Isy(addr=self._Isy_IP, userl=self._Isy_User, userp=self._Isy_Pass, eventupdates=1)
+        self._isy_controller = ISY.Isy(addr=self._Isy_IP, userl=self._Isy_User, userp=self._Isy_Pass, eventupdates=1)
 
         for action_id in self._actions:
             for trigger in self._actions[action_id].triggers:
-                self._Isy.callback_set(trigger, lambda data: self.handle_event(data))
+                self._isy_controller.callback_set(trigger, lambda data: self.handle_event(data))
 
         self.start_scene_thread()
         self.start_dimmer_thread()
@@ -229,7 +235,7 @@ class Director(object):
 
         while len(self._scene_queue) > 0:
             (schedule_time, scene) = self._scene_queue.pop()
-            scene.off(self.HueBridge)
+            scene.off(self.hue_bridge)
 
         self._scene_lock.release()
         self._scene_event.set()
@@ -251,7 +257,7 @@ class Director(object):
                 now = time.clock()
                 if self._scene_queue[0][0] <= now:
                     next_scene = self._scene_queue.pop(0)[1]
-                    new_time = next_scene.on(self.HueBridge)
+                    new_time = next_scene.on(self.hue_bridge)
                     if new_time:
                         self.queue_scene(now + new_time, next_scene)
                 else:

@@ -14,7 +14,6 @@ logger = logging.getLogger(__package__)
 
 
 class Action(object):
-
     def __init__(self, **kwargs):
         # logger.debug("Scene ", self.__class__.__name__)
 
@@ -22,7 +21,7 @@ class Action(object):
         self._shut_down = 0
         self._on = False
         self._current_scene = 0
-        self._ignore_ST = False
+        self._ignore_status = False
         self._brightness = 128
         self._brighten_factor = 0
 
@@ -80,15 +79,15 @@ class Action(object):
     def remove_scene(self, index):
         self._scenes.remove(index)
 
-    def on(self, director, ignoreST):
+    def on(self, director, ignore_status):
         if self._on:
             if len(self._scenes) > 1:
                 self.off(director)
                 self.current_scene += 1
-        self._ignore_ST = ignoreST
+        self._ignore_status = ignore_status
         scene = director.lookup_scene(self._scenes[self.current_scene])
         self._brightness = scene.brightness
-        wait_time = scene.on(director.HueBridge)
+        wait_time = scene.on(director.hue_bridge)
         if wait_time:
             director.add_scene(wait_time, scene)
         self._on = True
@@ -96,7 +95,7 @@ class Action(object):
     def off(self, director):
         scene = director.lookup_scene(self._scenes[self.current_scene])
         director.remove_scene(scene)
-        scene.off(director.HueBridge)
+        scene.off(director.hue_bridge)
         self._on = False
 
     def begin_lightlevel(self, director, brighten=True):
@@ -109,22 +108,22 @@ class Action(object):
 
     def end_lightlevel(self, director):
         director.remove_dimmer(self)
-        self._ignore_ST = True
+        self._ignore_status = True
 
     def update_lightlevel(self, director):
         scene = director.lookup_scene(self._scenes[self.current_scene])
         self.brightness += self._brighten_factor
 
         if self._on and self.brightness > 0:
-            scene.update_brightness(director.HueBridge, self.brightness, BRIGHT_TIME)
+            scene.update_brightness(director.hue_bridge, self.brightness, BRIGHT_TIME)
         else:
-            scene.off(director.HueBridge)
+            scene.off(director.hue_bridge)
 
     def set_lightlevel(self, director, level):
-        if not self._ignore_ST:
+        if not self._ignore_status:
             if level == 255:
                 self.on(director, False)
             elif level == 0:
                 self.off(director)
         else:
-            self._ignore_ST = False
+            self._ignore_status = False

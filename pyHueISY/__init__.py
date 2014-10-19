@@ -18,4 +18,4 @@ class MyFlask(Flask):
 
 app = MyFlask(__package__)
 
-import pyHueISY.ConfigApi
+import ConfigApi
