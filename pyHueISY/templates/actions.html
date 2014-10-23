@@ -15,7 +15,7 @@
                     <th>Scenes</th>
                 </thead>
                 <tbody>
-                    {% for action_id in actions %}
+                    {% for action_id in actions|sort %}
                         {% set actions_loop = loop %}
                         <tr>
                             <td>

@@ -4,13 +4,15 @@ __license__ = "BSD"
 
 __all__ = ['Director']
 
+import base64
+import os
 import threading
+import time
 
 from flask import json
 
 from phue import phue
 import ISY
-import time
 
 import Action
 import Scene
@@ -32,15 +34,16 @@ insteon_devices = {
 
 
 class Director(object):
-
     def __init__(self, **kwargs):
         # print("Scene ", self.__class__.__name__)
 
-        self.debug = kwargs.get("debug", 0)
+        self.debug = kwargs.get("debug", False)
+        self._config_path = kwargs.get("config_path", ".")
         self._shut_down = 0
         self._on = False
 
-        self._config = None
+        self._secret_key = None
+
         self._scene_thread = None
         self._scene_event = threading.Event()
         self._scene_lock = threading.Lock()
@@ -53,13 +56,13 @@ class Director(object):
         self._dimmer_queue = []
         self._dimmer_shutdown = False
 
-        self._Hue_IP = None
-        self._Hue_Username = None
+        self._Hue_IP = ""
+        self._Hue_Username = ""
         self._Hue_Bridge = None
 
-        self._Isy_IP = None
-        self._Isy_User = None
-        self._Isy_Pass = None
+        self._Isy_IP = ""
+        self._Isy_User = ""
+        self._Isy_Pass = ""
         self._isy_controller = None
 
         self._actions = {}
@@ -70,12 +73,41 @@ class Director(object):
         self._isy_triggers = None
         self._lights = None
 
-        logging.basicConfig(level=logging.DEBUG)
-
     @property
     def settings(self):
-        return {'HueIP': self._Hue_IP, 'HueUsername': self._Hue_Username, 'IsyIP': self._Isy_IP,
-                'IsyUser': self._Isy_User, 'IsyPass': self._Isy_Pass}
+        return {'HueIP': self._Hue_IP, 'HueUsername': self._Hue_Username,
+                'IsyIP': self._Isy_IP, 'IsyUser': self._Isy_User, 'IsyPass': self._Isy_Pass,
+                'SecretKey': self._secret_key}
+
+    def update_settings(self, settings):
+        if settings['HueIP'] != self._Hue_IP or settings['HueUsername'] != self._Hue_Username:
+            self._Hue_IP = settings['HueIP']
+            self._Hue_Username = settings['HueUsername']
+            if len(self._Hue_IP) > 0 and len(self._Hue_Username) > 0:
+                self._Hue_Bridge = phue.Bridge(ip=self._Hue_IP, username=self._Hue_Username)
+        if (settings['IsyIP'] != self._Isy_IP or settings['IsyUser'] != self._Isy_User or
+                settings['IsyPass'] != self._Isy_Pass):
+            self._Isy_IP = settings['IsyIP']
+            self._Isy_User = settings['IsyUser']
+            self._Isy_Pass = settings['IsyPass']
+            if len(self._Isy_IP) > 0 and len(self._Isy_User) > 0 and len(self._Isy_Pass) > 0:
+                self._isy_controller = ISY.Isy(addr=self._Isy_IP, userl=self._Isy_User, userp=self._Isy_Pass,
+                                               eventupdates=1)
+                for action_id in self._actions:
+                    for trigger in self._actions[action_id].triggers:
+                        self._isy_controller.callback_set(trigger, lambda data: self.handle_event(data))
+
+    @property
+    def settings_complete(self):
+        return (len(self._Hue_IP) > 0 and len(self._Hue_Username) > 0 and
+                len(self._Isy_IP) > 0 and len(self._Isy_User) > 0 and len(self._Isy_Pass) > 0)
+
+    @property
+    def secret_key(self):
+        if self._secret_key is None:
+            self._secret_key = os.urandom(32)
+            self.save_config()
+        return self._secret_key
 
     @property
     def isy_controller(self):
@@ -89,41 +121,120 @@ class Director(object):
     def scenes(self):
         return self._scenes
 
+    def rename_scene(self, old, new):
+        while not self._scene_lock.acquire():
+            pass
+
+        for scene_id in self._scenes:
+            if scene_id == old:
+                scene = self._scenes[scene_id]
+                scene.name = new
+                del self._scenes[scene_id]
+                self._scenes[scene.name] = scene
+
+        for action_id in self._actions:
+            for index, scene_id in enumerate(self._actions[action_id].scenes):
+                if scene_id == old:
+                    self._actions[action_id].remove_scene(index)
+                    self._actions[action_id].insert_scene(index, new)
+                    break
+
+        self._scene_lock.release()
+
+    def delete_scene(self, scene_id):
+        while not self._scene_lock.acquire():
+            pass
+
+        actions = []
+        for action_id in sorted(self._actions):
+            if scene_id in self._actions[action_id].scenes:
+                actions.append(self._actions[action_id].name)
+
+        if len(actions) == 0:
+            del self._scenes[scene_id]
+
+        self._scene_lock.release()
+
+        return actions
+
     def update_scene(self, scene):
         self._scenes[scene.name] = scene
-
-    @property
-    def actions(self):
-        return self._actions
 
     def lookup_scene(self, scene_id):
         return self._scenes[scene_id]
 
     @property
-    def config(self):
-        return self._config
+    def actions(self):
+        return self._actions
+
+    def rename_action(self, old, new):
+        for action_id, action in self._actions:
+            if action_id == old:
+                action.name = new
+                del self._actions[action_id]
+                self._actions[new] = action
+
+    def update_action(self, action):
+        if action.name in self._actions:
+            old_action = self._actions[action.name]
+            for trigger in old_action.triggers:
+                self._isy_controller.callback_del(trigger)
+        self._actions[action.name] = action
+        for trigger in action.triggers:
+            self._trigger_actions[trigger] = action
+            self._isy_controller.callback_set(trigger, lambda data: self.handle_event(data))
 
     def load_config(self):
-        config_fp = open('HueISY.json')
-        self._config = config = json.load(config_fp)
-        config_fp.close()
-        
-        self._Hue_IP = config.get("HueIP")
-        self._Hue_Username = config.get("HueUsername")
+        try:
+            config_fp = open(os.path.join(self._config_path, 'HueISY.json'))
+            config = json.load(config_fp)
+            config_fp.close()
+        except IOError:
+            config = {}
 
-        self._Isy_IP = config.get("IsyIP")
-        self._Isy_User = config.get("IsyUser")
-        self._Isy_Pass = config.get("IsyPass")
+        secret_key = config.get("SecretKey")
 
-        for action_cfg in config.get("actions", []):
+        if secret_key is not None:
+            self._secret_key = base64.b64decode(secret_key)
+        else:
+            self._secret_key = None
+
+        self._Hue_IP = config.get("HueIP", "")
+        self._Hue_Username = config.get("HueUsername", "")
+
+        self._Isy_IP = config.get("IsyIP", "")
+        self._Isy_User = config.get("IsyUser", "")
+        self._Isy_Pass = config.get("IsyPass", "")
+
+        for action_cfg in config.get("actions", {}):
             action = Action.Action(settings=action_cfg)
             self._actions[action.name] = action
             for trigger_id in action.triggers:
                 self._trigger_actions[trigger_id] = action
 
-        for scene_cfg in config.get("scenes", []):
+        for scene_cfg in config.get("scenes", {}):
             scene = Scene.Scene(settings=scene_cfg)
             self._scenes[scene.name] = scene
+
+    def save_config(self):
+        config = self.settings.copy()
+        config['SecretKey'] = base64.b64encode(self._secret_key)
+        if len(self._actions) > 0:
+            config['actions'] = []
+            for action_id in sorted(self._actions):
+                config['actions'].append(self._actions[action_id].serialize())
+        if len(self._scenes) > 0:
+            config['scenes'] = []
+            for scene_id in sorted(self._scenes):
+                config['scenes'].append(self._scenes[scene_id].serialize())
+        config_fp = open(os.path.join(self._config_path, 'HueISY.json'), 'w')
+        json.dump(config, config_fp, indent=4, separators=(',', ': '), sort_keys=True)
+        config_fp.write("\n")
+        config_fp.close()
+
+    def register_hue(self):
+        self._Hue_Bridge = phue.Bridge(ip=self._Hue_IP)
+        self._Hue_Username = self._Hue_Bridge.username
 
     def get_triggers(self):
         if self._isy_triggers is None:
@@ -164,28 +275,30 @@ class Director(object):
                      ", action="+data['Event']["action"] +
                      ", node="+data['Event']["node"])
         control = data['Event']['control']
-        responder = self._trigger_actions.get(data['Event']['node'])
-        if responder:
+        action = self._trigger_actions.get(data['Event']['node'])
+        if action:
             if control == 'DON':
-                responder.on(self, True)
+                action.on(self, True)
             elif control == 'DOF':
-                responder.off(self)
+                action.off(self)
             elif control == 'ST':
-                responder.set_lightlevel(self, int(data['Event']['action']))
+                action.set_lightlevel(self, int(data['Event']['action']))
             elif control == 'BMAN':
-                responder.begin_lightlevel(self, int(data['Event']['action']) == 1)
+                action.begin_lightlevel(self, int(data['Event']['action']) == 1)
             elif control == 'SMAN':
-                responder.end_lightlevel(self)
+                action.end_lightlevel(self)
 
     def start(self):
         self.load_config()
-        self._Hue_Bridge = phue.Bridge(ip=self._Hue_IP, username=self._Hue_Username)
+        if len(self._Hue_IP) > 0 and len(self._Hue_Username) > 0:
+            self._Hue_Bridge = phue.Bridge(ip=self._Hue_IP, username=self._Hue_Username)
 
-        self._isy_controller = ISY.Isy(addr=self._Isy_IP, userl=self._Isy_User, userp=self._Isy_Pass, eventupdates=1)
+        if len(self._Isy_IP) > 0 and len(self._Isy_User) > 0 and len(self._Isy_Pass) > 0:
+            self._isy_controller = ISY.Isy(addr=self._Isy_IP, userl=self._Isy_User, userp=self._Isy_Pass, eventupdates=1)
 
-        for action_id in self._actions:
-            for trigger in self._actions[action_id].triggers:
-                self._isy_controller.callback_set(trigger, lambda data: self.handle_event(data))
+            for action_id in self._actions:
+                for trigger in self._actions[action_id].triggers:
+                    self._isy_controller.callback_set(trigger, lambda data: self.handle_event(data))
 
         self.start_scene_thread()
         self.start_dimmer_thread()
@@ -208,16 +321,16 @@ class Director(object):
             self._scene_event.set()
             self._scene_thread.join()
 
-    def add_scene(self, wait_time, scene):
+    def queue_scene(self, wait_time, scene):
         while not self._scene_lock.acquire():
             pass
 
-        self.queue_scene(time.clock() + wait_time, scene)
+        self._insert_scene(time.clock() + wait_time, scene)
 
         self._scene_lock.release()
         self._scene_event.set()
 
-    def remove_scene(self, scene):
+    def dequeue_scene(self, scene):
         while not self._scene_lock.acquire():
             pass
 
@@ -229,7 +342,7 @@ class Director(object):
         self._scene_lock.release()
         self._scene_event.set()
 
-    def remove_all_scenes(self):
+    def dequeue_all_scenes(self):
         while not self._scene_lock.acquire():
             pass
 
@@ -245,7 +358,7 @@ class Director(object):
         while True:
             if self._scene_event.wait(timeout=timeout):
                 if self._scene_shutdown:
-                    self.remove_all_scenes()
+                    self.dequeue_all_scenes()
                     break
 
             while not self._scene_lock.acquire():
@@ -259,7 +372,7 @@ class Director(object):
                     next_scene = self._scene_queue.pop(0)[1]
                     new_time = next_scene.on(self.hue_bridge)
                     if new_time:
-                        self.queue_scene(now + new_time, next_scene)
+                        self._insert_scene(now + new_time, next_scene)
                 else:
                     break
 
@@ -270,7 +383,7 @@ class Director(object):
 
             self._scene_lock.release()
 
-    def queue_scene(self, future_time, scene):
+    def _insert_scene(self, future_time, scene):
         inserted = False
         for index in range(len(self._scene_queue) - 1, -1, -1):
             if self._scene_queue[index][0] <= future_time:
@@ -298,21 +411,22 @@ class Director(object):
             self._dimmer_event.set()
             self._dimmer_thread.join()
 
-    def add_dimmer(self, responder):
+    def add_dimmer(self, action):
         while not self._dimmer_lock.acquire():
             pass
 
-        self._dimmer_queue.append(responder)
+        if action not in self._dimmer_queue:
+            self._dimmer_queue.append(action)
 
         self._dimmer_lock.release()
         self._dimmer_event.set()
 
-    def remove_dimmer(self, responder):
+    def remove_dimmer(self, action):
         while not self._dimmer_lock.acquire():
             pass
 
-        for index in range(len(self._dimmer_queue)):
-            if self._dimmer_queue[index] is responder:
+        for index, queue_action in enumerate(self._dimmer_queue):
+            if queue_action is action:
                 del self._dimmer_queue[index]
                 break
 
@@ -342,8 +456,8 @@ class Director(object):
 
             self._dimmer_event.clear()
 
-            for responder in self._dimmer_queue:
-                responder.update_lightlevel(self)
+            for action in self._dimmer_queue:
+                action.update_lightlevel(self)
 
             if len(self._dimmer_queue) > 0:
                 timeout = 0.5

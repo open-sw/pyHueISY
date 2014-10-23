@@ -27,6 +27,7 @@ class Action(object):
 
         settings = kwargs.get("settings", {})
         self._name = settings.get("name", "default")
+        self._description = settings.get("description", "")
         self._triggers = settings.get("triggers", [])
         self._scenes = settings.get("scenes", [])
 
@@ -38,14 +39,26 @@ class Action(object):
     def brightness(self, value):
         if value < 0:
             value = 0
-        elif value > 254:
-            value = 254
+        elif value > 255:
+            value = 255
 
         self._brightness = value
 
     @property
     def name(self):
         return self._name
+
+    @name.setter
+    def name(self, value):
+        self._name = value
+
+    @property
+    def description(self):
+        return self._description
+
+    @description.setter
+    def description(self, value):
+        self._description = value
 
     @property
     def triggers(self):
@@ -73,8 +86,19 @@ class Action(object):
     def scenes(self):
         return self._scenes
 
-    def add_scene(self, value):
+    def serialize(self):
+        action = {'name': self._name, 'description': self._description}
+        if len(self._triggers) > 0:
+            action['triggers'] = self._triggers
+        if len(self._scenes) > 0:
+            action['scenes'] = self._scenes
+        return action
+
+    def append_scene(self, value):
         self._scenes.append(value)
+
+    def insert_scene(self, index, value):
+        self._scenes.insert(index, value)
 
     def remove_scene(self, index):
         self._scenes.remove(index)
@@ -89,12 +113,12 @@ class Action(object):
         self._brightness = scene.brightness
         wait_time = scene.on(director.hue_bridge)
         if wait_time:
-            director.add_scene(wait_time, scene)
+            director.queue_scene(wait_time, scene)
         self._on = True
 
     def off(self, director):
         scene = director.lookup_scene(self._scenes[self.current_scene])
-        director.remove_scene(scene)
+        director.dequeue_scene(scene)
         scene.off(director.hue_bridge)
         self._on = False
 
@@ -103,7 +127,6 @@ class Action(object):
             self._brighten_factor = BRIGHT_INCR
         else:
             self._brighten_factor = -DIM_INCR
-
         director.add_dimmer(self)
 
     def end_lightlevel(self, director):
@@ -120,10 +143,11 @@ class Action(object):
             scene.off(director.hue_bridge)
 
     def set_lightlevel(self, director, level):
-        if not self._ignore_status:
-            if level == 255:
-                self.on(director, False)
-            elif level == 0:
-                self.off(director)
-        else:
-            self._ignore_status = False
+        return
+        # if not self._ignore_status:
+        #     if level == 255:
+        #         self.on(director, False)
+        #     elif level == 0:
+        #         self.off(director)
+        # else:
+        #     self._ignore_status = False

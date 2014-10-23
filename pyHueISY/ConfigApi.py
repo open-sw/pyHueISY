@@ -7,8 +7,15 @@ import re
 import Action
 import Scene
 from pyHueISY import app
-from flask import json, request, redirect, render_template, url_for
+from flask import flash, json, request, redirect, render_template, url_for
 
+
+@app.route('/')
+def index():
+    if app.director.settings_complete:
+        return redirect(url_for('show_actions'), code=302)
+    else:
+        return redirect(url_for('show_settings'), code=302)
 
 @app.route('/config/')
 def get_config():
@@ -37,7 +44,15 @@ def show_actions():
 def show_action(action_id):
     if request.method == "POST":
         action = parse_action(request.values)
+        if action_id != action.name and action_id != 'new':    # Rename
+            app.director.rename_action(action_id, action.name)
+            flash("Action renamed from " + action_id + " to " + action.name + " and updated")
+        elif action_id == "new":
+            flash("Action " + action.name + " added")
+        else:
+            flash("Action " + action.name + " updated")
         app.director.update_action(action)
+        app.director.save_config()
         return redirect(url_for('show_action', action_id=action.name), code=303)
     else:
         if action_id == 'new':
@@ -50,13 +65,24 @@ def show_action(action_id):
 
 @app.route('/action/<action_id>/delete')
 def delete_action(action_id):
-    name, description = app.director.delete_action(action_id)
-    return render_template('action_deleted.html', name=name, description=description)
+    app.director.delete_action(action_id)
+    app.director.save_config()
+    flash("Action " + action_id + " deleted")
+    return redirect(url_for('show_actions'), code=303)
 
 
 @app.route('/settings', methods=['GET', 'POST'])
 def show_settings():
-    return render_template('settings.html', settings=app.director.settings)
+    if request.method == "POST":
+        settings = parse_settings(request.values)
+        app.director.update_settings(settings)
+        if 'HueRegister' in request.values:
+            app.director.register_hue()
+        flash("Settings updated")
+        app.director.save_config()
+        return redirect(url_for('show_settings'), code=303)
+    else:
+        return render_template('settings.html', settings=app.director.settings)
 
 
 @app.route('/scenes')
@@ -66,15 +92,28 @@ def show_scenes():
 
 @app.route('/scene/<scene_id>/delete')
 def delete_scene(scene_id):
-    name, description = app.director.delete_scene(scene_id)
-    return render_template('scene_deleted.html', name=name, description=description)
+    actions = app.director.delete_scene(scene_id)
+    if len(actions) > 0:
+        flash("Can't delete scene " + scene_id + ", it is referenced by these actions: " + ", ".join(actions))
+    else:
+        app.director.save_config()
+        flash("Scene " + scene_id + " deleted")
+    return redirect(url_for('show_scenes'), code=303)
 
 
 @app.route('/scene/<scene_id>', methods=['GET', 'POST'])
 def show_scene(scene_id):
     if request.method == "POST":
         scene = parse_scene(request.values)
+        if scene_id != scene.name and scene_id != 'new':
+            app.director.rename_scene(scene_id, scene.name)
+            flash("Scene renamed from " + scene_id + " to " + scene.name + " and updated")
+        elif scene_id == "new":
+            flash("Scene " + scene.name + " added")
+        else:
+            flash("Scene " + scene.name + " updated")
         app.director.update_scene(scene)
+        app.director.save_config()
         return redirect(url_for('show_scene', scene_id=scene.name), code=303)
     else:
         if scene_id == 'new':
@@ -132,46 +171,30 @@ def parse_scene(values):
 
 
 def parse_action(values):
-    re_light = re.compile(r'light\[(\d+)\]\[(\w+)\]')
-    re_color = re.compile(r'color\[(\d+)\]')
-    scene = Scene.Scene()
+    re_trigger = re.compile(r'trigger\[(\d+)\]')
+    re_scene = re.compile(r'scene\[(\d+)\]')
+    action = Action.Action()
     if values["name"] != '':
-        scene.name = values["name"]
+        action.name = values["name"]
 
     if values["description"] != '':
-        scene.description = values["description"]
+        action.description = values["description"]
 
-    if values["transition-time"] != '':
-        scene.transitiontime = values["transition-time"]
-
-    if values["type"] != '':
-        scene.type = values["type"]
-
-    if values["interval"] != '':
-        scene.interval = int(values["interval"])
-    lights = {}
-    colors = {}
     for value in values:
-        m = re_light.match(value)
-        if m is not None and m.lastindex == 2:
-            index = int(m.group(1))
-            if index not in lights:
-                lights[index] = {}
-            lights[index][m.group(2)] = values[value]
+        m = re_trigger.match(value)
+        if m is not None and m.lastindex == 1:
+            action.add_trigger(values[value])
         else:
-            m = re_color.match(value)
+            m = re_scene.match(value)
             if m is not None and m.lastindex == 1:
-                colors[int(m.group(1))] = values[value]
+                action.append_scene(values[value])
 
-    for key in sorted(lights):
-        light = lights[key]
-        (light_type, light_id) = light['light'].split('-')
-        light['type'] = light_type
-        light['id'] = int(light_id)
-        del light['light']
-        scene.add_member_rgb(light)
+    return action
 
-    for key in sorted(colors):
-        scene.add_color_rgb(colors[key])
 
-    return scene
+def parse_settings(values):
+    return {
+        'HueIP': values['HueIP'], 'HueUsername': values['HueUsername'],
+        'IsyIP': values['IsyIP'], 'IsyUser': values['IsyUser'], 'IsyPass': values['IsyPass']
+    }
+
