@@ -1,7 +1,7 @@
 [submodule "ISYlib-python"]
 	path = ISYlib-python
-	url = https://github.com/Robert-Nelson/ISYlib-python.git
+	url = https://github.com/open-sw/ISYlib-python.git
 	branch = Python3-Changes
 [submodule "phue"]
 	path = phue
-	url = https://github.com/Robert-Nelson/phue
+	url = https://github.com/open-sw/phue
