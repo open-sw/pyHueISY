@@ -18,19 +18,19 @@ Configuration is done using a web interface.  The Settings page will be displaye
 user name are entered.  In most cases the IP addresses of the Hue bridge and ISY controller will be detected 
 automatically.
 
-![Scene Configuration](http://robert-nelson.github.io/pyHueISY/images/settings.png)
+![Scene Configuration](http://open-sw.github.io/pyHueISY/images/settings.png)
 
 Once the settings have been completed you can add your first scene.  A scene comprises a set of Philips' Hue Lights and
 a palette of colors.  The scene specifies how the colors should be assigned to the lights.  The most basic form has a 
 fixed color assigned to each light.  More complex scenes can specify that lights should be assigned in sequence and then
 changed after a specified interval.
 
-![Scene Configuration](http://robert-nelson.github.io/pyHueISY/images/scene.png)
+![Scene Configuration](http://open-sw.github.io/pyHueISY/images/scene.png)
 
 Actions associate Insteon controllers with a set of scenes.  Actions respond to on, off, bright and dim commands.  If an
 on command is received when the action is already on then the next scene will be selected.
 
-![Action Configuration](http://robert-nelson.github.io/pyHueISY/images/action.png)
+![Action Configuration](http://open-sw.github.io/pyHueISY/images/action.png)
 
 ## Acknowledgements
 
