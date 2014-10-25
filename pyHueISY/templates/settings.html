@@ -23,7 +23,7 @@
                             User Name
                         </td>
                         <td>
-                            <input name="HueUsername" type="text" maxlength="20" size="20" value="{{ settings.HueUsername }}">
+                            <input name="HueUsername" type="text" maxlength="32" size="32" value="{{ settings.HueUsername }}">
                         </td>
                         <td>
                             <input name="HueRegister" type="submit" value="Create hue User" onclick="alert('Press the link button on the Hue bridge and then click OK'); return true">
@@ -67,6 +67,6 @@
             </fieldset>
         </fieldset>
         <p/>
-        <div style="text-align: center"><input type="submit" value="Update"></div>
+        <div style="text-align: center"><input type="submit" value="Save"></div>
     </form>
 {% endblock %}

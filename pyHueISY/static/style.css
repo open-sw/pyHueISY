@@ -13,11 +13,14 @@ h2              { font-size: 1.2em; }
 .add-entry dl   { font-weight: bold; }
 .metanav        { font-size: 1em; padding: 0.3em; margin-top: 0em;
                   margin-bottom: 1em; background: #fafafa; }
-.flash          { background: #cee5F5; padding: 0.5em;
-                  border: 1px solid #aacbe2; }
+.flash-message, .flash-error { padding: 0.5em; border: 1px solid #aacbe2; }
 .error          { background: #f0d6d6; padding: 0.5em; }
 
 th              { text-align: left }
+
+.flash-error    { background: #DC143C; }
+
+.flash-message  { background: #CEE5F5; }
 
 legend {
     font-size: 1.25em;
@@ -88,7 +91,7 @@ legend {
     background-position: right bottom;
 }
 
-.move-up-button:disabled, .move-down-button:disabled
+.move-up-button:disabled, .move-down-button:disabled, .back-button:disabled, .forward-button:disabled, label:disabled
 {
     opacity:0.2;
 }

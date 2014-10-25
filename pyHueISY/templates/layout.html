@@ -6,24 +6,29 @@
 
 <div class=page>
     <h1>pyHueISY</h1>
-    <div class=metanav>
+    <div class="metanav">
         <table style="width: 100%">
             <tr>
                 <td>
-                    <input type="button" id="back-button" class="back-button" onclick="window.location.href = '{% block back_url %}{% endblock %}'"><label for="back-button" class="button-label">{% block back_text %}{% endblock %}</label>
+                    <input type="button" id="back-button" class="back-button" {{ disable_nav }} onclick="window.location.href = '{% block back_url %}{% endblock %}'"><label for="back-button" class="button-label" {{ disable_nav }}>{% block back_text %}{% endblock %}</label>
                 </td>
                 <td style="text-align: center">
                     <span style="font-size: 1.75em">{% block page_title %}{% endblock %}</span>
                 </td>
                 <td style="text-align: right">
-                    <label for="forward-button" class="button-label">{% block forward_text %}{% endblock %}</label><input type="button" id="forward-button" class="forward-button" onclick="window.location.href = '{% block forward_url %}{% endblock %}'">
+                    <label for="forward-button" class="button-label" {{ disable_nav }}>{% block forward_text %}{% endblock %}</label><input type="button" id="forward-button" class="forward-button" {{ disable_nav }} onclick="window.location.href = '{% block forward_url %}{% endblock %}'">
                 </td>
             </tr>
         </table>
     </div>
     <p/>
-    {% for message in get_flashed_messages() %}
-        <div class=flash>{{ message }}</div>
-    {% endfor %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+    <div class="flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+    <p/>
+        {% endif %}
+    {% endwith %}
     {% block body %}{% endblock %}
 </div>

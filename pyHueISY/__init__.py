@@ -10,7 +10,7 @@ from flask import Flask
 class MyFlask(Flask):
     jinja_options = Flask.jinja_options.copy()
     jinja_options.update({
-        'extensions': ['jinja2.ext.do'],
+        'extensions': ['jinja2.ext.do',  'jinja2.ext.with_'],
         'trim_blocks': True,
         'lstrip_blocks': True
     })

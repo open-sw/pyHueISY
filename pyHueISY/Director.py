@@ -85,6 +85,8 @@ class Director(object):
             self._Hue_Username = settings['HueUsername']
             if len(self._Hue_IP) > 0 and len(self._Hue_Username) > 0:
                 self._Hue_Bridge = phue.Bridge(ip=self._Hue_IP, username=self._Hue_Username)
+            else:
+                self._Hue_Bridge = None
         if (settings['IsyIP'] != self._Isy_IP or settings['IsyUser'] != self._Isy_User or
                 settings['IsyPass'] != self._Isy_Pass):
             self._Isy_IP = settings['IsyIP']
@@ -96,6 +98,8 @@ class Director(object):
                 for action_id in self._actions:
                     for trigger in self._actions[action_id].triggers:
                         self._isy_controller.callback_set(trigger, lambda data: self.handle_event(data))
+            else:
+                self._isy_controller = None
 
     @property
     def settings_complete(self):
@@ -200,9 +204,18 @@ class Director(object):
             self._secret_key = None
 
         self._Hue_IP = config.get("HueIP", "")
+        if self._Hue_IP == "":
+            self._Hue_IP = phue.Bridge.get_ip_address()
         self._Hue_Username = config.get("HueUsername", "")
 
         self._Isy_IP = config.get("IsyIP", "")
+        if self._Isy_IP == "":
+            from ISY.IsyDiscover import isy_discover
+            result = isy_discover(timeout=30, count=1)
+            if len(result) == 1:
+                import urlparse
+                self._Isy_IP = urlparse.urlparse(result.values()[0]['URLBase']).netloc
+
         self._Isy_User = config.get("IsyUser", "")
         self._Isy_Pass = config.get("IsyPass", "")
 

@@ -17,10 +17,6 @@ def index():
     else:
         return redirect(url_for('show_settings'), code=302)
 
-@app.route('/config/')
-def get_config():
-    return json.dumps(app.director.get_config()), 200, {"Content-Type": "application/json"}
-
 
 def shutdown_server():
     func = request.environ.get('werkzeug.server.shutdown')
@@ -37,11 +33,17 @@ def shutdown():
 
 @app.route('/actions')
 def show_actions():
+    if app.director.hue_bridge is None:
+        flash("Hue bridge settings must be saved first", category="error")
+        return redirect(url_for('show_settings'), code=302)
     return render_template('actions.html', triggers=app.director.get_triggers(), actions=app.director.actions)
 
 
 @app.route('/action/<action_id>', methods=['GET', 'POST'])
 def show_action(action_id):
+    if app.director.hue_bridge is None:
+        flash("Hue bridge settings must be saved first", category="error")
+        return redirect(url_for('show_settings'), code=302)
     if request.method == "POST":
         action = parse_action(request.values)
         if action_id != action.name and action_id != 'new':    # Rename
@@ -53,7 +55,7 @@ def show_action(action_id):
             flash("Action " + action.name + " updated")
         app.director.update_action(action)
         app.director.save_config()
-        return redirect(url_for('show_action', action_id=action.name), code=303)
+        return redirect(url_for('show_actions'), code=303)
     else:
         if action_id == 'new':
             action = Action.Action()
@@ -65,6 +67,9 @@ def show_action(action_id):
 
 @app.route('/action/<action_id>/delete')
 def delete_action(action_id):
+    if app.director.hue_bridge is None:
+        flash("Hue bridge settings must be saved first", category="error")
+        return redirect(url_for('show_settings'), code=302)
     app.director.delete_action(action_id)
     app.director.save_config()
     flash("Action " + action_id + " deleted")
@@ -82,19 +87,30 @@ def show_settings():
         app.director.save_config()
         return redirect(url_for('show_settings'), code=303)
     else:
-        return render_template('settings.html', settings=app.director.settings)
+        if app.director.hue_bridge is None:
+            disable_nav='disabled'
+        else:
+            disable_nav=''
+        return render_template('settings.html', settings=app.director.settings, disable_nav=disable_nav)
 
 
 @app.route('/scenes')
 def show_scenes():
+    if app.director.hue_bridge is None:
+        flash("Hue bridge settings must be saved first", category="error")
+        return redirect(url_for('show_settings'), code=302)
     return render_template('scenes.html', scenes=app.director.scenes)
 
 
 @app.route('/scene/<scene_id>/delete')
 def delete_scene(scene_id):
+    if app.director.hue_bridge is None:
+        flash("Hue bridge settings must be saved first", category="error")
+        return redirect(url_for('show_settings'), code=302)
     actions = app.director.delete_scene(scene_id)
     if len(actions) > 0:
-        flash("Can't delete scene " + scene_id + ", it is referenced by these actions: " + ", ".join(actions))
+        flash("Can't delete scene " + scene_id + ", it is referenced by these actions: " + ", ".join(actions),
+              category="error")
     else:
         app.director.save_config()
         flash("Scene " + scene_id + " deleted")
@@ -103,6 +119,9 @@ def delete_scene(scene_id):
 
 @app.route('/scene/<scene_id>', methods=['GET', 'POST'])
 def show_scene(scene_id):
+    if app.director.hue_bridge is None:
+        flash("Hue bridge settings must be saved first", category="error")
+        return redirect(url_for('show_settings'), code=302)
     if request.method == "POST":
         scene = parse_scene(request.values)
         if scene_id != scene.name and scene_id != 'new':
@@ -114,7 +133,7 @@ def show_scene(scene_id):
             flash("Scene " + scene.name + " updated")
         app.director.update_scene(scene)
         app.director.save_config()
-        return redirect(url_for('show_scene', scene_id=scene.name), code=303)
+        return redirect(url_for('show_scenes'), code=303)
     else:
         if scene_id == 'new':
             scene = Scene.Scene()

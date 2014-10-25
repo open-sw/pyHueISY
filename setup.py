@@ -25,6 +25,6 @@ setup(
     license='',
     author='robert',
     author_email='robertn@the-nelsons.org',
-    description='Controlling Software for Universal Device\'s ISY 994i and Phillips\' Hue',
+    description='Controlling Software for Universal Device\'s ISY 994i and Philips\' Hue',
     install_requires=['flask']
 )
