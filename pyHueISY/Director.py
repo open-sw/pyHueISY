@@ -129,12 +129,10 @@ class Director(object):
         while not self._scene_lock.acquire():
             pass
 
-        for scene_id in self._scenes:
-            if scene_id == old:
-                scene = self._scenes[scene_id]
-                scene.name = new
-                del self._scenes[scene_id]
-                self._scenes[scene.name] = scene
+        scene = self._scenes[old]
+        scene.name = new
+        del self._scenes[old]
+        self._scenes[scene.name] = scene
 
         for action_id in self._actions:
             for index, scene_id in enumerate(self._actions[action_id].scenes):
