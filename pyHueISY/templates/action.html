@@ -128,7 +128,7 @@
                             <td>
                                 <div>
                                     <select name="scene[{{ loop.index }}]">
-                                        {% for scene_id in scenes %}
+                                        {% for scene_id in scenes|sort %}
                                             <option value="{{ scene_id }}" {% if scene_id == action_scene_id %} selected {% endif %}> {{ scenes[scene_id].name + ": " + scenes[scene_id].description }}</option>
                                         {% endfor %}
                                     </select>
@@ -149,7 +149,7 @@
                         <td>
                             <div>
                                 <select id="scene-new">
-                                    {% for scene_id in scenes %}
+                                    {% for scene_id in scenes|sort %}
                                         <option value="{{ scene_id }}"> {{ scenes[scene_id].name + ": " + scenes[scene_id].description }}</option>
                                     {% endfor %}
                                 </select>

@@ -68,7 +68,7 @@ class Action(object):
         self._triggers.append(value)
 
     def remove_trigger(self, index):
-        self._triggers.remove(index)
+        del self._triggers[index]
 
     @property
     def current_scene(self):
@@ -101,7 +101,7 @@ class Action(object):
         self._scenes.insert(index, value)
 
     def remove_scene(self, index):
-        self._scenes.remove(index)
+        del self._scenes[index]
 
     def on(self, director, ignore_status):
         if self._on:

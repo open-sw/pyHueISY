@@ -114,7 +114,7 @@ class Scene(object):
         self.calc_brightness()
 
     def remove_color(self, index):
-        self._colors.remove(index)
+        del self._colors[index]
         self.calc_brightness()
 
     @property
@@ -167,7 +167,7 @@ class Scene(object):
         self.calc_brightness()
 
     def remove_member(self, index):
-        self._lights.remove(index)
+        del self._lights[index]
         self.calc_brightness()
 
     def off(self, hue_bridge):
