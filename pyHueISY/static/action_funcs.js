@@ -12,17 +12,20 @@ function addTrigger()
 
     var elemOrigSelect = elemNewRow.getElementsByTagName("select")[0];
 
-    var elem = elemInsertRow.getElementsByTagName("select")[0];
-    elem.id = "trigger-" + nTriggers;
-    elem.name = "trigger[" + nTriggers + "]";
-    elem.selectedIndex = elemOrigSelect.selectedIndex;
-    elem.onchange = function (event) { filter_select(event, "trigger-" + nTriggers + "-type"); };
-
-    elem = elemInsertRow.getElementsByTagName("input")[0];
+    var elem = elemInsertRow.getElementsByTagName("input")[0];
 
     elem.id = "remove-trigger-" + nTriggers;
     elem.className = "delete-button";
     elem.onclick = removeTrigger;
+
+    elem = elemInsertRow.getElementsByTagName("select")[0];
+    elem.id = "trigger-" + nTriggers;
+    elem.name = "trigger[" + nTriggers + "]";
+    elem.selectedIndex = elemOrigSelect.selectedIndex;
+    elem.onchange = new Function("event", "filter_select(event, \"trigger-" + nTriggers + "-type\")");
+
+    elem = elemInsertRow.getElementsByTagName("span")[0];
+    elem.id = "trigger-" + nTriggers + "-type"
 
     elemNewRow.parentNode.insertBefore(elemInsertRow, elemNewRow);
 }

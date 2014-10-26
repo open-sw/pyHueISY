@@ -188,6 +188,15 @@ class Director(object):
             self._trigger_actions[trigger] = action
             self._isy_controller.callback_set(trigger, lambda data: self.handle_event(data))
 
+    def delete_action(self, action_id):
+        action = self._actions[action_id]
+        action.off(self)
+        for trigger in action.triggers:
+            self._isy_controller.callback_del(trigger)
+            del self._trigger_actions[trigger]
+        self.remove_dimmer(action)
+        del self._actions[action_id]
+
     def load_config(self):
         try:
             config_fp = open(os.path.join(self._config_path, 'HueISY.json'))
@@ -265,7 +274,7 @@ class Director(object):
                         }
                         self._isy_triggers[node_info['address']] = node_info
                 else:
-                    print("skipping node", node)
+                    logger.debug("skipping node", node)
         return self._isy_triggers
 
     def get_lights_by_id(self):

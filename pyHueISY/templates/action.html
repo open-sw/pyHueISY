@@ -49,25 +49,25 @@
                 </thead>
                 <tbody>
                     {% for trigger in action.triggers %}
-                       <tr>
-                            <td>
-                                <div>
-                                    <input id="delete-trigger-{{ loop.index }}" type="button" class="delete-button" value="" onclick="deleteTrigger(event)">
-                                </div>
-                            </td>
-                            <td>
-                                <div>
-                                    <select name="trigger[{{ loop.index }}]" onchange="filter_select(event, 'trigger-{{ loop.index }}-type')">
-                                        {% for trigger_info in triggers.values()|sort(attribute='name') %}
-                                            <option value="{{ trigger_info.address }}" {% if trigger_info.address == trigger %} selected {% endif %}>{{ trigger_info.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                            </td>
-                            <td>
-                                <span id="trigger-{{ loop.index }}-type">{{ triggers[trigger]['type_desc'] }}</span>
-                            </td>
-                        </tr>
+                    <tr>
+                        <td>
+                            <div>
+                                <input id="delete-trigger-{{ loop.index }}" type="button" class="delete-button" value="" onclick="deleteTrigger(event)">
+                            </div>
+                        </td>
+                        <td>
+                            <div>
+                                <select name="trigger[{{ loop.index }}]" onchange="filter_select(event, 'trigger-{{ loop.index }}-type')">
+                                    {% for trigger_info in triggers.values()|sort(attribute='name') %}
+                                        <option value="{{ trigger_info.address }}" {% if trigger_info.address == trigger %} selected {% endif %}>{{ trigger_info.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </td>
+                        <td>
+                            <span id="trigger-{{ loop.index }}-type">{{ triggers[trigger]['type_desc'] }}</span>
+                        </td>
+                    </tr>
                     {% endfor %}
                     <tr id="trigger-new-row">
                         <td>
