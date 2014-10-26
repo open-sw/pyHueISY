@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name='pyHueISY',
-    version='0.9.1',
+    version='0.9.2',
     packages=['pyHueISY', 'ISY', 'phue'],
     package_dir={'ISY': 'ISYlib-python/ISY', 'phue': 'phue', 'pyHueISY': 'pyHueISY'},
     include_package_data=True,
