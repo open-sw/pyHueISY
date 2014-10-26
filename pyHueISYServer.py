@@ -6,7 +6,7 @@ from pyHueISY import app, Director
 
 import logging
 
-logging.basicConfig(level=logging.DEBUG)
+#logging.basicConfig(level=logging.DEBUG)
 
 app.director = Director.Director(config_path=app.instance_path)
 app.director.start()

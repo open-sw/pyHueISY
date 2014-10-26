@@ -199,14 +199,22 @@ def parse_action(values):
     if values["description"] != '':
         action.description = values["description"]
 
+    triggers = {}
+    scenes = {}
     for value in values:
         m = re_trigger.match(value)
         if m is not None and m.lastindex == 1:
-            action.add_trigger(values[value])
+            triggers[int(m.group(1))] = values[value]
         else:
             m = re_scene.match(value)
             if m is not None and m.lastindex == 1:
-                action.append_scene(values[value])
+                scenes[int(m.group(1))] = values[value]
+
+    for trigger_index in sorted(triggers):
+        action.add_trigger(triggers[trigger_index])
+
+    for scene_index in sorted(scenes):
+        action.append_scene(scenes[scene_index])
 
     return action
 
