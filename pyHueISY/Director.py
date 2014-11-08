@@ -160,7 +160,10 @@ class Director(object):
         return actions
 
     def update_scene(self, scene):
+        old_scene = self._scenes.get(scene.name)
         self._scenes[scene.name] = scene
+        if old_scene is not None:
+            self.requeue_scene(old_scene, scene)
 
     def lookup_scene(self, scene_id):
         return self._scenes[scene_id]
@@ -192,7 +195,7 @@ class Director(object):
         for trigger in action.triggers:
             self._isy_controller.callback_del(trigger)
             del self._trigger_actions[trigger]
-        self.remove_dimmer(action)
+        self.dequeue_dimmer(action)
         del self._actions[action_id]
 
     def load_config(self):
@@ -345,7 +348,7 @@ class Director(object):
         while not self._scene_lock.acquire():
             pass
 
-        self._insert_scene(time.clock() + wait_time, scene)
+        self._insert_scene(time.time() + wait_time, scene)
 
         self._scene_lock.release()
         self._scene_event.set()
@@ -357,6 +360,18 @@ class Director(object):
         for index in range(len(self._scene_queue)):
             if self._scene_queue[index][1] is scene:
                 del self._scene_queue[index]
+                break
+
+        self._scene_lock.release()
+        self._scene_event.set()
+
+    def requeue_scene(self, old_scene, scene):
+        while not self._scene_lock.acquire():
+            pass
+
+        for index in range(len(self._scene_queue)):
+            if self._scene_queue[index][1] is old_scene:
+                self._scene_queue[index][1] = scene
                 break
 
         self._scene_lock.release()
@@ -387,7 +402,7 @@ class Director(object):
             self._scene_event.clear()
 
             while len(self._scene_queue) > 0:
-                now = time.clock()
+                now = time.time()
                 if self._scene_queue[0][0] <= now:
                     next_scene = self._scene_queue.pop(0)[1]
                     new_time = next_scene.on(self.hue_bridge)
@@ -397,7 +412,7 @@ class Director(object):
                     break
 
             if len(self._scene_queue) > 0:
-                timeout = self._scene_queue[0][0] - time.clock()
+                timeout = self._scene_queue[0][0] - time.time()
             else:
                 timeout = None
 
@@ -431,7 +446,7 @@ class Director(object):
             self._dimmer_event.set()
             self._dimmer_thread.join()
 
-    def add_dimmer(self, action):
+    def queue_dimmer(self, action):
         while not self._dimmer_lock.acquire():
             pass
 
@@ -441,7 +456,7 @@ class Director(object):
         self._dimmer_lock.release()
         self._dimmer_event.set()
 
-    def remove_dimmer(self, action):
+    def dequeue_dimmer(self, action):
         while not self._dimmer_lock.acquire():
             pass
 
@@ -453,7 +468,7 @@ class Director(object):
         self._dimmer_lock.release()
         self._dimmer_event.set()
 
-    def remove_all_dimmers(self):
+    def dequeue_all_dimmers(self):
         while not self._dimmer_lock.acquire():
             pass
 
@@ -468,7 +483,7 @@ class Director(object):
         while True:
             if self._dimmer_event.wait(timeout=timeout):
                 if self._dimmer_shutdown:
-                    self.remove_all_dimmers()
+                    self.dequeue_all_dimmers()
                     break
 
             while not self._dimmer_lock.acquire():

@@ -149,14 +149,14 @@
         <p/>
         <fieldset>
             <legend>Automatic Colors</legend>
-            <table>
+            <table width="100%">
                 <tbody>
                     <tr>
                         <td colspan="3">
                             Color Assignment
                         </td>
                         <td style="width: 75%" colspan="5">
-                            <div class="switch-toggle switch-3 switch-candy switch-candy-blue">
+                            <div class="switch-toggle switch-4 switch-candy switch-candy-blue">
                                 <input id="simple" name="type" value="simple" type="radio" {% if scene.type == "simple" %} checked {% endif %}>
                                 <label for="simple" onclick="">Simple</label>
 
@@ -165,6 +165,9 @@
 
                                 <input id="descending" name="type" value="descending" type="radio" {% if scene.type == "descending" %} checked {% endif %}>
                                 <label for="descending" onclick="">Descending</label>
+
+                                <input id="random" name="type" value="random" type="radio" {% if scene.type == "random" %} checked {% endif %}>
+                                <label for="random" onclick="">Random</label>
 
                                 <a></a>
                             </div>

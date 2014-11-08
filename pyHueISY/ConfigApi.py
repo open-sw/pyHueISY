@@ -199,6 +199,8 @@ def parse_action(values):
     if values["description"] != '':
         action.description = values["description"]
 
+    action.random_scene = "random-scene" in values
+
     triggers = {}
     scenes = {}
     for value in values:

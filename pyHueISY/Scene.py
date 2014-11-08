@@ -6,6 +6,7 @@ __all__ = ['Scene']
 
 import copy
 import logging
+import random
 import colorsys
 
 Hue_Red = 0
@@ -185,11 +186,14 @@ class Scene(object):
 
     def on(self, hue_bridge):
         color_index = self._first_color
+        color_index_list = range(len(self._colors))
+        if self._type == "random":
+            random.shuffle(color_index_list)
         for light in self._lights:
             if light["mode"] == "auto":
-                brightness = self._colors[color_index].get("bri", 128)
+                brightness = self._colors[color_index_list[color_index]].get("bri", 128)
                 light["current_brightness"] = brightness
-                action = self._colors[color_index].copy()
+                action = self._colors[color_index_list[color_index]].copy()
                 action[u"bri"] = self._brightness - self._base_brightness + brightness
                 action[u"on"] = True
                 if self._transitiontime is not None:
@@ -228,6 +232,8 @@ class Scene(object):
             self._first_color -= 1
             if self._first_color <= 0:
                 self._first_color = len(self._colors) - 1
+        elif self._type == "random":
+            pass
         return self._interval
 
     def update_brightness(self, hue_bridge, brightness, transition_time=None):

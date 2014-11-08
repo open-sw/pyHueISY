@@ -98,6 +98,17 @@
         <p/>
         <fieldset>
             <legend>Scenes</legend>
+            <div>
+                <label class="switch-light switch-candy switch-candy-blue" onclick="">
+                    <input id="random-scene" name="random-scene" type="checkbox" {% if action.random_scene %}checked{% endif %}>
+                    <span>
+                        Random Scene
+                        <span>Off</span>
+                        <span>On</span>
+                    </span>
+                    <a></a>
+                </label>
+            </div>
             <table>
                 <thead>
                     <tr>
