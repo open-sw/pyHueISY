@@ -5,6 +5,7 @@ __license__ = "BSD"
 __all__ = ['Action']
 
 import logging
+import random
 
 DIM_INCR = 25
 BRIGHT_INCR = 28
@@ -28,6 +29,7 @@ class Action(object):
         settings = kwargs.get("settings", {})
         self._name = settings.get("name", "default")
         self._description = settings.get("description", "")
+        self._random_scene = settings.get("random_scene", False)
         self._triggers = settings.get("triggers", [])
         self._scenes = settings.get("scenes", [])
 
@@ -51,6 +53,14 @@ class Action(object):
     @name.setter
     def name(self, value):
         self._name = value
+
+    @property
+    def random_scene(self):
+        return self._random_scene
+
+    @random_scene.setter
+    def random_scene(self, value):
+        self._random_scene = value
 
     @property
     def description(self):
@@ -87,7 +97,7 @@ class Action(object):
         return self._scenes
 
     def serialize(self):
-        action = {'name': self._name, 'description': self._description}
+        action = {'name': self._name, 'description': self._description, 'random_scene': self._random_scene}
         if len(self._triggers) > 0:
             action['triggers'] = self._triggers
         if len(self._scenes) > 0:
@@ -107,7 +117,15 @@ class Action(object):
         if self._on:
             if len(self._scenes) > 1:
                 self.off(director)
-                self.current_scene += 1
+                if self._random_scene:
+                    scene_list = range(len(self._scenes))
+                    random.shuffle(scene_list)
+                    if scene_list[0] != self.current_scene:
+                        self.current_scene = scene_list[0]
+                    else:
+                        self.current_scene = scene_list[1]
+                else:
+                    self.current_scene += 1
         self._ignore_status = ignore_status
         scene = director.lookup_scene(self._scenes[self.current_scene])
         self._brightness = scene.brightness
@@ -127,10 +145,10 @@ class Action(object):
             self._brighten_factor = BRIGHT_INCR
         else:
             self._brighten_factor = -DIM_INCR
-        director.add_dimmer(self)
+        director.queue_dimmer(self)
 
     def end_lightlevel(self, director):
-        director.remove_dimmer(self)
+        director.dequeue_dimmer(self)
         self._ignore_status = True
 
     def update_lightlevel(self, director):
