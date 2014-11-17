@@ -43,21 +43,24 @@ function removeColor(event) {
 }
 
 function update_move_color_buttons(tableNode) {
+    var index;
     var upButtons = tableNode.getElementsByClassName("move-up-button");
 
-    upButtons[0].disabled = true;
+    if (upButtons.length > 1) {
+        upButtons[0].disabled = true;
 
-    for (index = 1; index < upButtons.length - 1; index++) {
-        upButtons[index].disabled = false;
+        for (index = 1; index < upButtons.length - 1; index++) {
+            upButtons[index].disabled = false;
+        }
     }
 
     var downButtons = tableNode.getElementsByClassName("move-down-button");
 
-    for (index = 0; index < upButtons.length - 2; index++) {
-        downButtons[index].disabled = false;
-    }
+    if (downButtons.length > 1) {
+        for (index = 0; index < downButtons.length - 2; index++) {
+            downButtons[index].disabled = false;
+        }
 
-    if (upButtons.length > 1) {
         downButtons[downButtons.length - 2].disabled = true;
     }
 }
