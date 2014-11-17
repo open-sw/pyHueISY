@@ -75,7 +75,7 @@
                                 <input id="add-trigger" type="button" class="add-button" value="" onclick="addTrigger()">
                             </div>
                         </td>
-                        <td>
+                        <td class="prototype-elements">
                             <div>
                                 <select id="trigger-new" onchange="filter_select(event, 'trigger-new-type')">
                                     {% for trigger_info in triggers.values()|sort(attribute='name') %}
@@ -88,7 +88,7 @@
                                 </select>
                             </div>
                         </td>
-                        <td>
+                        <td class="prototype-elements">
                             <span id="trigger-new-type">{{ trigger_type[0] }}</span>
                         </td>
                     </tr>
@@ -153,11 +153,17 @@
                                 <input id="add-scene" type="button" class="add-button" value="" onclick="addScene()">
                             </div>
                         </td>
-                        <td>    {# Placeholder for MoveUp button #}
+                        <td class="prototype-elements">
+                            <div>
+                                <input id="move-scene-up-new" type="button" class="move-up-button" onclick="moveUpScene(event)">
+                            </div>
                         </td>
-                        <td>    {# Placeholder for MoveDown button #}
+                        <td class="prototype-elements">
+                            <div>
+                                <input id="move-scene-down-new" type="button" class="move-down-button" onclick="moveDownScene(event)">
+                            </div>
                         </td>
-                        <td>
+                        <td class="prototype-elements">
                             <div>
                                 <select id="scene-new">
                                     {% for scene_id in scenes|sort %}

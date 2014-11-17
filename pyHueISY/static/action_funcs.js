@@ -10,8 +10,6 @@ function addTrigger()
 
     nTriggers += 1;
 
-    var elemOrigSelect = elemNewRow.getElementsByTagName("select")[0];
-
     var elem = elemInsertRow.getElementsByTagName("input")[0];
 
     elem.id = "remove-trigger-" + nTriggers;
@@ -21,11 +19,16 @@ function addTrigger()
     elem = elemInsertRow.getElementsByTagName("select")[0];
     elem.id = "trigger-" + nTriggers;
     elem.name = "trigger[" + nTriggers + "]";
-    elem.selectedIndex = elemOrigSelect.selectedIndex;
     elem.onchange = new Function("event", "filter_select(event, \"trigger-" + nTriggers + "-type\")");
 
     elem = elemInsertRow.getElementsByTagName("span")[0];
-    elem.id = "trigger-" + nTriggers + "-type"
+    elem.id = "trigger-" + nTriggers + "-type";
+
+    var elemList = elemInsertRow.getElementsByClassName("prototype-elements");
+
+    while (elemList.length > 0 ) {
+        elemList[0].className = "";
+    }
 
     elemNewRow.parentNode.insertBefore(elemInsertRow, elemNewRow);
 }
@@ -46,42 +49,27 @@ function addScene()
 
     nScenes += 1;
 
-    var elemOrigSelect = elemNewRow.getElementsByTagName("select")[0];
-
     elemInsertRow.removeAttribute("id");
 
     var elemSelect = elemInsertRow.getElementsByTagName("select")[0];
-    var elemTDList = elemInsertRow.getElementsByTagName("td");
 
     elemSelect.id = "scene-" + nScenes;
     elemSelect.name = "scene[" + nScenes + "]";
-    elemSelect.selectedIndex = elemOrigSelect.selectedIndex;
 
-    var elemInput = elemInsertRow.getElementsByTagName("input")[0];
+    var elemInputList = elemInsertRow.getElementsByTagName("input");
 
-    elemInput.id = "remove-scene-" + nScenes;
-    elemInput.className = "delete-button";
-    elemInput.onclick = removeScene;
+    elemInputList[0].id = "remove-scene-" + nScenes;
+    elemInputList[0].className = "delete-button";
+    elemInputList[0].onclick = removeScene;
 
-    var elemMoveUp = document.createElement('input');
-    elemMoveUp.id = "move-scene-up-" + nScenes;
-    elemMoveUp.className = "move-up-button";
-    elemMoveUp.setAttribute("type", "button");
-    elemMoveUp.onclick = moveUpScene;
+    elemInputList[1].id = "move-scene-up-" + nScenes;
+    elemInputList[2].id = "move-scene-down-" + nScenes;
 
-    var elemMoveUpDiv = document.createElement("div");
-    elemMoveUpDiv.appendChild(elemMoveUp);
-    elemTDList[1].appendChild(elemMoveUpDiv);
+    var elemList = elemInsertRow.getElementsByClassName("prototype-elements");
 
-    var elemMoveDown = document.createElement('input');
-    elemMoveDown.id = "move-scene-down-" + nScenes;
-    elemMoveDown.className = "move-down-button";
-    elemMoveDown.setAttribute("type", "button");
-    elemMoveDown.onclick = moveDownScene;
-
-    var elemMoveDownDiv = document.createElement("div");
-    elemMoveDownDiv.appendChild(elemMoveDown);
-    elemTDList[2].appendChild(elemMoveDownDiv);
+    while (elemList.length > 0 ) {
+        elemList[0].className = "";
+    }
 
     elemNewRow.parentNode.insertBefore(elemInsertRow, elemNewRow);
 
@@ -103,17 +91,21 @@ function update_move_scene_buttons(tableNode) {
     var upButtons = tableNode.getElementsByClassName("move-up-button");
     var index;
 
-    for (index = 0; index < upButtons.length; index++) {
+    upButtons[0].disabled = true;
+
+    for (index = 1; index < upButtons.length - 1; index++) {
         upButtons[index].disabled = false;
     }
-    upButtons[0].disabled = true;
 
     var downButtons = tableNode.getElementsByClassName("move-down-button");
 
-    for (index = 0; index < upButtons.length; index++) {
+    for (index = 0; index < upButtons.length - 2; index++) {
         downButtons[index].disabled = false;
     }
-    downButtons[downButtons.length - 1].disabled = true;
+
+    if (downButtons.length > 1) {
+        downButtons[downButtons.length - 2].disabled = true;
+    }
 }
 
 function moveUpScene(event) {

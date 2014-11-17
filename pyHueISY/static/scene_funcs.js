@@ -13,34 +13,18 @@ function addColor()
     inputList[0].className = "delete-button";
     inputList[0].onclick = removeColor;
 
-    inputList[1].id = "color-" + nColors;
-    inputList[1].name = "color[" + nColors + "]";
-    inputList[1].color = new jscolor.color(inputList[1], {});
+    inputList[1].id = "move-color-up-" + nColors;
+    inputList[2].id = "move-color-down-" + nColors;
 
-    var tdList = elemInsertRow.getElementsByTagName("td");
+    inputList[3].id = "color-" + nColors;
+    inputList[3].name = "color[" + nColors + "]";
+    inputList[3].color = new jscolor.color(inputList[3], {});
 
-    var elemMoveUp = document.createElement('input');
-    elemMoveUp.id = "move-color-up-" + nColors;
-    elemMoveUp.className = "move-up-button";
-    elemMoveUp.setAttribute("type", "button");
-    elemMoveUp.onclick = moveUpColor;
+    var elemList = elemInsertRow.getElementsByClassName("prototype-elements");
 
-    var elemMoveUpDiv = document.createElement("div");
-    elemMoveUpDiv.appendChild(elemMoveUp);
-    var elemMoveUpTD = document.createElement("td");
-
-    tdList[1].appendChild(elemMoveUpDiv);
-
-    var elemMoveDown = document.createElement('input');
-    elemMoveDown.id = "move-color-down-" + nColors;
-    elemMoveDown.className = "move-down-button";
-    elemMoveDown.setAttribute("type", "button");
-    elemMoveDown.onclick = moveDownColor;
-
-    var elemMoveDownDiv = document.createElement("div");
-    elemMoveDownDiv.appendChild(elemMoveDown);
-
-    tdList[2].appendChild(elemMoveDownDiv);
+    while (elemList.length > 0 ) {
+        elemList[0].className = "";
+    }
 
     elemNewRow.parentNode.insertBefore(elemInsertRow, elemNewRow);
 
@@ -61,17 +45,21 @@ function removeColor(event) {
 function update_move_color_buttons(tableNode) {
     var upButtons = tableNode.getElementsByClassName("move-up-button");
 
-    for (index = 0; index < upButtons.length; index++) {
+    upButtons[0].disabled = true;
+
+    for (index = 1; index < upButtons.length - 1; index++) {
         upButtons[index].disabled = false;
     }
-    upButtons[0].disabled = true;
 
     var downButtons = tableNode.getElementsByClassName("move-down-button");
 
-    for (index = 0; index < upButtons.length; index++) {
+    for (index = 0; index < upButtons.length - 2; index++) {
         downButtons[index].disabled = false;
     }
-    downButtons[downButtons.length - 1].disabled = true;
+
+    if (upButtons.length > 1) {
+        downButtons[downButtons.length - 2].disabled = true;
+    }
 }
 
 function moveUpColor(event) {
@@ -132,11 +120,8 @@ function addLight()
 
     nLights += 1;
 
-    var elemOrigSelect = elemNewRow.getElementsByTagName("select")[0];
-
     var elem = elemInsertRow.getElementsByTagName("select")[0];
     elem.name = "light[" + nLights + "][light]";
-    elem.selectedIndex = elemOrigSelect.selectedIndex;
 
     var elemListInput = elemInsertRow.getElementsByTagName("input");
 
@@ -195,6 +180,12 @@ function addLight()
                 elem.setAttribute("for", "off-" + nLights);
                 break;
         }
+    }
+
+    var elemList = elemInsertRow.getElementsByClassName("prototype-elements");
+
+    while (elemList.length > 0 ) {
+        elemList[0].className = "";
     }
 
     elemNewRow.parentNode.insertBefore(elemInsertRow, elemNewRow);
