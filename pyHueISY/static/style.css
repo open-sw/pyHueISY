@@ -16,11 +16,13 @@ h2              { font-size: 1.2em; }
 .flash-message, .flash-error { padding: 0.5em; border: 1px solid #aacbe2; }
 .error          { background: #f0d6d6; padding: 0.5em; }
 
-th              { text-align: left }
+th              { text-align: left; }
 
 .flash-error    { background: #DC143C; }
 
 .flash-message  { background: #CEE5F5; }
+
+.prototype-elements { visibility: hidden; }
 
 legend {
     font-size: 1.25em;

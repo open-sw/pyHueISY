@@ -106,7 +106,7 @@
                                 <input id="add-light" type="button" class="add-button" value="" onclick="addLight()">
                             </div>
                         </td>
-                        <td>
+                        <td class="prototype-elements">
                             <div>
                                 <select>
                                     <optgroup label="Groups">
@@ -123,7 +123,7 @@
                                 </select>
                             </div>
                         </td>
-                        <td style="width: 50%">
+                        <td class="prototype-elements" style="width: 50%">
                             <div class="switch-toggle switch-3 switch-candy switch-candy-blue">
                                 <input id="auto-new" name="mode-new" value="auto" type="radio" onclick="document.getElementById('light-new-color').disabled = true;">
                                 <label id="auto-new-label" for="auto-new" onclick="">Auto</label>
@@ -137,7 +137,7 @@
                                 <a></a>
                             </div>
                         </td>
-                        <td>
+                        <td class="prototype-elements">
                             <div>
                                 <input id="light-new-color" class="color">
                             </div>
@@ -211,9 +211,17 @@
                                 <input id="add-color" type="button" class="add-button" onclick="addColor()">
                             </div>
                         </td>
-                        <td></td>
-                        <td></td>
-                        <td>
+                        <td class="prototype-elements">
+                            <div>
+                                <input id="move-color-up-new" type="button" class="move-up-button" onclick="moveUpColor(event)">
+                            </div>
+                        </td>
+                        <td class="prototype-elements">
+                            <div>
+                                <input id="move-color-down-new" type="button" class="move-down-button" onclick="moveDownColor(event)">
+                            </div>
+                        </td>
+                        <td class="prototype-elements">
                             <div>
                                 <input id="color-new" class="color">
                             </div>
